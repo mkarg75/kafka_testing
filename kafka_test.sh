@@ -23,7 +23,6 @@ function templatize {
         sed -i "s/__REPLICAS__/$NUM_PODS/g" ./ocp_logtest.yaml
         sed -i "s/__NUM_LINES__/$LOG_LINES/g" ./ocp_logtest.yaml
         sed -i "s/__RATE__/$LOG_PER_POD_MIN/g" ./ocp_logtest.yaml
-        exit
 }
 
 function cleanup {
@@ -51,8 +50,6 @@ done
 
 # modify the template with the requested settings
 templatize
-
-exit
 
 # the actual run
 echo Starting the test, please be patient
