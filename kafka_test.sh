@@ -3,7 +3,7 @@
 # configurable options
 
 NUM_PROJ=10     # number of projects
-NUM_POD=10      # number of pods per project
+NUM_PODS=10     # number of pods per project
 LOGRATE=15000   # combined rate of msgs/sec of all logging pods
 RUNTIME=30 # runtime in minutes
 SLEEPTIME=$(( $RUNTIME*60 + 3 ))
@@ -14,15 +14,16 @@ HOSTNAME=$(oc get route -n dittybopper | grep -v NAME | awk '{print $2}')
 
 function templatize {
         echo Templatizing the config file
-        LOG_PER_POD=$(( $LOGRATE / $(( $NUM_PROJ * $NUM_POD)) )) # per second
+        LOG_PER_POD=$(( $LOGRATE / $(( $NUM_PROJ * $NUM_PODS)) )) # per second
         LOG_PER_POD_MIN=$(( $LOG_PER_POD * 60 )) # per minute
         LOG_LINES=$(( $LOG_PER_POD_MIN * $RUNTIME ))
 
         cp ./template ./ocp_logtest.yaml
         sed -i "s/__PROJECTS__/$NUM_PROJ/g" ./ocp_logtest.yaml
-        sed -i "s/__REPLICAS__/$NUM_POD/g" ./ocp_logtest.yaml
+        sed -i "s/__REPLICAS__/$NUM_PODS/g" ./ocp_logtest.yaml
         sed -i "s/__NUM_LINES__/$LOG_LINES/g" ./ocp_logtest.yaml
         sed -i "s/__RATE__/$LOG_PER_POD_MIN/g" ./ocp_logtest.yaml
+        exit
 }
 
 function cleanup {
@@ -37,26 +38,28 @@ function cleanup {
 }
 
 # parse arguments
-while getopts :p:l:r:t: option
+while getopts :t:p:l:r: option
 do
 case "${option}"
 in
 p) NUM_PROJ=${OPTARG};;
 r) NUM_PODS=${OPTARG};;
 l) LOGRATE=${OPTARG};;
-t) RUNTIME=${OPTARG}};;
+r) RUNTIME=${OPTARG}};;
 esac
 done
 
 # modify the template with the requested settings
 templatize
 
+exit
+
 # the actual run
-echo Starting the test
+echo Starting the test, please be patient
 starttime=$(date +%s%N | cut -b1-13)
 #~/svt/openshift_scalability/cluster-loader.py -f ~/svt/openshift_scalability/config/ocp-logtest.yaml --kubeconfig=/home/kni/clusterconfigs/auth/kubeconfig
 cd ~/svt/openshift_scalability
-./cluster-loader.py -f /tmp/ocp_logtest.yaml --kubeconfig=/home/kni/clusterconfigs/auth/kubeconfig
+./cluster-loader.py -f /tmp/ocp_logtest.yaml --kubeconfig=/home/kni/clusterconfigs/auth/kubeconfig 2>&1 > /dev/null
 sleep $SLEEPTIME
 endtime=$(date +%s%N | cut -b1-13)
 
