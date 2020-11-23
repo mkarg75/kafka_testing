@@ -1,0 +1,20 @@
+projects:
+  - num: __PROJECTS__
+    basename: logtest
+    ifexists: delete
+    tuning: default
+    templates:
+      - num: 1
+        file: ./content/logtest/logtest-rc.json
+        parameters:
+         - REPLICAS: "__REPLICAS__"
+         - INITIAL_FLAGS: "--num-lines __NUM_LINES__ --line-length 1024 --word-length 9 --rate __RATE__ --fixed-line\n"
+
+tuningsets:
+  - name: default
+    pods:
+      stepping:
+        stepsize: 5
+        pause: 0 min
+      rate_limit:
+        delay: 0 ms
